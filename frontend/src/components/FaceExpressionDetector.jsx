@@ -5,7 +5,6 @@ const FaceExpressionDetector = () => {
   const videoRef = useRef();
   const canvasRef = useRef();
 
-  // Start the webcam
   const startVideo = () => {
     navigator.mediaDevices
       .getUserMedia({ video: true })
@@ -23,40 +22,51 @@ const FaceExpressionDetector = () => {
 
       await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
       await faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL);
+      await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
 
       startVideo();
     };
 
     loadModels();
 
-    videoRef.current && videoRef.current.addEventListener('play', () => {
+    const handlePlay = () => {
+      const video = videoRef.current;
       const canvas = canvasRef.current;
+
+      // Ensure canvas size exactly matches video size
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+
       const displaySize = {
-        width: videoRef.current.videoWidth,
-        height: videoRef.current.videoHeight,
+        width: video.videoWidth,
+        height: video.videoHeight,
       };
+
       faceapi.matchDimensions(canvas, displaySize);
 
       const interval = setInterval(async () => {
         const detections = await faceapi
-          .detectAllFaces(
-            videoRef.current,
-            new faceapi.TinyFaceDetectorOptions()
-          )
+          .detectAllFaces(video, new faceapi.TinyFaceDetectorOptions())
+          .withFaceLandmarks()
           .withFaceExpressions();
 
-        const resizedDetections = faceapi.resizeResults(
-          detections,
-          displaySize
-        );
+        const resizedDetections = faceapi.resizeResults(detections, displaySize);
 
-        canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
-        faceapi.draw.drawDetections(canvas, resizedDetections);
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        faceapi.draw.drawFaceLandmarks(canvas, resizedDetections);
         faceapi.draw.drawFaceExpressions(canvas, resizedDetections);
       }, 100);
 
       return () => clearInterval(interval);
-    });
+    };
+
+    videoRef.current?.addEventListener('play', handlePlay);
+
+    return () => {
+      videoRef.current?.removeEventListener('play', handlePlay);
+    };
   }, []);
 
   return (
