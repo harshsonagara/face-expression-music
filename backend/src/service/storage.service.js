@@ -1,4 +1,5 @@
 var ImageKit = require("imagekit");
+const mongoose = require('mongoose')
 require('dotenv')
 var imagekit = new ImageKit({
     publicKey: process.env.IMAGEKIT_PUBLIC_KEY,
@@ -9,12 +10,13 @@ var imagekit = new ImageKit({
 function uploadFile(file) {
     return new Promise((resolve, reject) => {
         imagekit.upload({
-            file:file.buffer,
-            fileName:"hello-cohort"
-        }),(error,result)=>{
-            if(error){
+            file: file.buffer,
+            fileName: new mongoose.Types.ObjectId().toString(),
+            folder: "mood-audio",
+        }), (error, result) => {
+            if (error) {
                 reject(error);
-            }else{
+            } else {
                 resolve(result);
             }
         }

@@ -1,12 +1,19 @@
-import React from "react";
-import FaceExpressionDetector from "./components/FaceExpressionDetector";
+import { useState } from 'react'
+import FacialExpression from "./components/FacialExpression.jsx"
+import MoodSongs from './components/MoodSongs.jsx'
 
-const App = () => {
+function App() {
+
+  const [ Songs, setSongs ] = useState([
+       
+    ])
+
   return (
-    <div>
-      <FaceExpressionDetector />
-    </div>
-  );
-};
+    <>
+      <FacialExpression setSongs={setSongs} />
+      <MoodSongs Songs={Songs} />
+    </>
+  )
+}
 
-export default App;
+export default App
